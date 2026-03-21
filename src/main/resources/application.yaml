@@ -14,5 +14,5 @@ spring:
 
 # tmap api
 api:
-  key: M5AZXu9U5m3eLF8iz9APy7BXYvpmViPE393ZUnzX
+  key:
   base-url: https://apis.openapi.sk.com/tmap

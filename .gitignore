@@ -37,4 +37,4 @@ out/
 .vscode/
 
 # Sensitive configuration files
-application*.yml
+application*.yaml

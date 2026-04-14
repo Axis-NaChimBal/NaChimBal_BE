@@ -83,93 +83,105 @@ public class RouteService {
 
     // 응답 형식 파싱
     private RouteResponse parseRouteResponse(String body) throws Exception {
-        // features 배열 순회
-        JsonNode features = objectMapper.readTree(body).path("features");
+        JsonNode root = objectMapper.readTree(body);
+        JsonNode features = root.path("features");
 
         int totalDistance = 0, totalTime = 0;
-        double prevX = 0, prevY = 0;
+
         List<RouteResponse.StepInfo> steps = new ArrayList<>();
+        List<RouteResponse.Coordinate> fullPath = new ArrayList<>();
+
         List<JsonNode> featureList = new ArrayList<>();
         features.forEach(featureList::add);
 
         for (int i = 0; i < featureList.size(); i++) {
-            JsonNode feature  = featureList.get(i);
-            JsonNode props    = feature.path("properties");
+            JsonNode feature = featureList.get(i);
+            JsonNode props = feature.path("properties");
             JsonNode geometry = feature.path("geometry");
+            String geoType = geometry.path("type").asText();
 
-            // 방향 안내(Point)를 기준으로 정보 가져옴
-            if ("Point".equals(geometry.path("type").asText())) {
-                // 전체 요약 정보 저장
-                if (props.has("totalDistance")) {
-                    totalDistance = props.path("totalDistance").asInt();
-                    totalTime     = props.path("totalTime").asInt();
-                }
+            // 전체 경로 polyline 구성
+            if ("LineString".equals(geoType)) {
+                JsonNode coords = geometry.path("coordinates");
+                for (int k = 0; k < coords.size(); k++) {
+                    JsonNode coord = coords.get(k);
+                    double x = coord.get(0).asDouble();
+                    double y = coord.get(1).asDouble();
 
-                // 안내 정보
-                if (props.has("description")) {
-                    JsonNode coords = geometry.path("coordinates");
-                    if (coords.isArray() && coords.size() >= 2) {
-
-                        // 다음 방향 전환(Point) 전까지의 거리 합 -> LineString의 거리를 모두 더함
-                        int dist = 0;
-                        double lastLineX = 0, lastLineY = 0;
-
-                        for (int j = i + 1; j < featureList.size(); j++) {
-                            JsonNode next         = featureList.get(j);
-                            JsonNode nextGeometry = next.path("geometry");
-                            String   nextType     = nextGeometry.path("type").asText();
-
-                            if ("LineString".equals(nextType)) {
-                                dist += next.path("properties").path("distance").asInt();
-
-                                // 마지막 LineString의 끝 좌표 저장
-                                JsonNode lineCoords = nextGeometry.path("coordinates");
-                                if (lineCoords.isArray() && lineCoords.size() > 0) {
-                                    JsonNode lastCoord = lineCoords.get(lineCoords.size() - 1);
-                                    lastLineX = lastCoord.get(0).asDouble();
-                                    lastLineY = lastCoord.get(1).asDouble();
-                                }
-                            } else if ("Point".equals(nextType)) {
-                                break; // 다음 Point가 나오면 중단
-                            }
+                    if (!fullPath.isEmpty()) {
+                        RouteResponse.Coordinate last = fullPath.get(fullPath.size() - 1);
+                        if (isSameCoordinate(last.getX(), last.getY(), x, y)) {
+                            continue;
                         }
-
-                        double curX = coords.get(0).asDouble();
-                        double curY = coords.get(1).asDouble();
-
-                        // 1m 전 알림 좌표 계산
-                        double noticeX = curX, noticeY = curY;
-
-                        if (lastLineX != 0 && lastLineY != 0) {
-                            // 마지막 LineString 끝점 기준으로 계산
-                            double[] np = calcNoticePoint(lastLineX, lastLineY, curX, curY, NOTICE_DISTANCE);
-                            noticeX = np[0];
-                            noticeY = np[1];
-                        } else if (prevX != 0 && prevY != 0) {
-                            // LineString 없으면 이전 Point 기준
-                            double[] np = calcNoticePoint(prevX, prevY, curX, curY, NOTICE_DISTANCE);
-                            noticeX = np[0];
-                            noticeY = np[1];
-                        }
-
-                        steps.add(RouteResponse.StepInfo.builder()
-                                .description(props.path("description").asText())
-                                .turnType(props.has("turnType") ? props.path("turnType").asText() : "")
-                                .pointX(coords.get(0).asDouble())
-                                .pointY(coords.get(1).asDouble())
-                                .distance(dist)
-                                .noticePointX(noticeX)
-                                .noticePointY(noticeY)
-                                .hapticType(resolveHapticType(
-                                        props.has("turnType") ? props.path("turnType").asText() : ""
-                                ))
-                                .build());
-
-                        prevX = curX;
-                        prevY = curY;
                     }
+
+                    fullPath.add(new RouteResponse.Coordinate(x, y));
                 }
             }
+
+            // 안내 이벤트 처리
+            if (!"Point".equals(geoType)) {
+                continue;
+            }
+
+            JsonNode coords = geometry.path("coordinates");
+            if (!coords.isArray() || coords.size() < 2) {
+                continue;
+            }
+
+            // totalDistance / totalTime은 보통 시작 Point에 들어있음
+            if (props.has("totalDistance")) {
+                totalDistance = props.path("totalDistance").asInt();
+                totalTime = props.path("totalTime").asInt();
+            }
+
+            double pointX = coords.get(0).asDouble();
+            double pointY = coords.get(1).asDouble();
+
+            String description = props.path("description").asText("");
+            String turnType = props.path("turnType").asText("");
+
+            // 1) incomingLine 찾기 -> noticePoint 계산용
+            JsonNode incomingLine = findPreviousLineString(featureList, i);
+
+            double noticePointX = pointX;
+            double noticePointY = pointY;
+
+            if (incomingLine != null) {
+                List<RouteResponse.Coordinate> incomingPolyline = extractCoordinates(incomingLine.path("geometry").path("coordinates"));
+
+                if (!incomingPolyline.isEmpty()) {
+                    RouteResponse.Coordinate noticePoint =
+                            calcNoticePointFromPolyline(incomingPolyline, pointX, pointY, NOTICE_DISTANCE);
+
+                    noticePointX = noticePoint.getX();
+                    noticePointY = noticePoint.getY();
+                }
+            }
+
+            // 2) outgoingLines 거리 합산 -> 현재 Point 이후 다음 Point 전까지
+            int distanceToNextPoint = 0;
+            for (int j = i + 1; j < featureList.size(); j++) {
+                JsonNode next = featureList.get(j);
+                String nextType = next.path("geometry").path("type").asText();
+
+                if ("LineString".equals(nextType)) {
+                    distanceToNextPoint += next.path("properties").path("distance").asInt();
+                } else if ("Point".equals(nextType)) {
+                    break;
+                }
+            }
+
+            steps.add(RouteResponse.StepInfo.builder()
+                    .description(description)
+                    .turnType(turnType)
+                    .pointX(pointX)
+                    .pointY(pointY)
+                    .distance(distanceToNextPoint)
+                    .noticePointX(noticePointX)
+                    .noticePointY(noticePointY)
+                    .hapticType(resolveHapticType(turnType))
+                    .build());
         }
 
         return RouteResponse.builder()
@@ -177,7 +189,125 @@ public class RouteService {
                 .totalTime(totalTime)
                 .noticeDistance(NOTICE_DISTANCE)
                 .steps(steps)
+                .fullPath(fullPath)
                 .build();
+    }
+
+    // LineString 찾기
+    private JsonNode findPreviousLineString(List<JsonNode> featureList, int currentIndex) {
+        for (int i = currentIndex - 1; i >= 0; i--) {
+            JsonNode feature = featureList.get(i);
+            String geoType = feature.path("geometry").path("type").asText();
+
+            if ("LineString".equals(geoType)) {
+                return feature;
+            } else if ("Point".equals(geoType)) {
+                // Point가 또 나왔다면 그 이전에 incoming line이 없는 구조일 수 있음
+                break;
+            }
+        }
+        return null;
+    }
+
+    // LineString 좌표 변환
+    private List<RouteResponse.Coordinate> extractCoordinates(JsonNode coordsNode) {
+        List<RouteResponse.Coordinate> result = new ArrayList<>();
+
+        if (coordsNode == null || !coordsNode.isArray()) {
+            return result;
+        }
+
+        for (JsonNode coord : coordsNode) {
+            if (coord.isArray() && coord.size() >= 2) {
+                result.add(new RouteResponse.Coordinate(
+                        coord.get(0).asDouble(),
+                        coord.get(1).asDouble()
+                ));
+            }
+        }
+
+        return result;
+    }
+
+    // noticePoint 계산
+    private RouteResponse.Coordinate calcNoticePointFromPolyline(
+            List<RouteResponse.Coordinate> polyline,
+            double pointX,
+            double pointY,
+            double noticeDistance
+    ) {
+        // 안전 처리
+        if (polyline == null || polyline.isEmpty()) {
+            return new RouteResponse.Coordinate(pointX, pointY);
+        }
+
+        if (polyline.size() == 1) {
+            return polyline.get(0);
+        }
+
+        // turnPoint에 가장 가까운 점을 찾아서 거기서부터 역추적
+        double remaining = noticeDistance;
+
+        int startIndex = findClosestIndex(polyline, pointX, pointY);
+        for (int i = startIndex; i > 0; i--) {
+            RouteResponse.Coordinate to = polyline.get(i);
+            RouteResponse.Coordinate from = polyline.get(i - 1);
+
+            double segmentDistance = distanceMeters(from.getX(), from.getY(), to.getX(), to.getY());
+
+            if (segmentDistance <= 0) {
+                continue;
+            }
+
+            if (remaining <= segmentDistance) {
+                // 현재 선분 안에서 notice point를 찾을 수 있음
+                double ratio = remaining / segmentDistance;
+
+                double noticeX = to.getX() - (to.getX() - from.getX()) * ratio;
+                double noticeY = to.getY() - (to.getY() - from.getY()) * ratio;
+
+                return new RouteResponse.Coordinate(noticeX, noticeY);
+            }
+
+            remaining -= segmentDistance;
+        }
+
+        // noticeDistance가 incoming polyline 전체 길이보다 길면 시작점으로 clamp
+        return polyline.get(0);
+    }
+
+    // 거리 계산 -> 하버사인
+    private double distanceMeters(double fromX, double fromY, double toX, double toY) {
+        final double R = 6371000.0;
+
+        double dLat = Math.toRadians(toY - fromY);
+        double dLon = Math.toRadians(toX - fromX);
+
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(fromY)) * Math.cos(Math.toRadians(toY))
+                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    // 가장 가깐운 회전지점 찾기
+    private int findClosestIndex(List<RouteResponse.Coordinate> polyline, double px, double py) {
+        int closest = polyline.size() - 1;
+        double minDist = Double.MAX_VALUE;
+        for (int i = 0; i < polyline.size(); i++) {
+            double d = distanceMeters(polyline.get(i).getX(), polyline.get(i).getY(), px, py);
+            if (d < minDist) {
+                minDist = d;
+                closest = i;
+            }
+        }
+        return closest;
+    }
+
+    // 중복 좌표 비교
+    private boolean isSameCoordinate(double x1, double y1, double x2, double y2) {
+        double epsilon = 1e-10;
+        return Math.abs(x1 - x2) < epsilon && Math.abs(y1 - y2) < epsilon;
     }
 
     // 햅틱 패턴
@@ -185,6 +315,9 @@ public class RouteService {
         if (turnType == null || turnType.isEmpty()) return HapticType.GO_STRAIGHT;
 
         return switch (turnType) {
+            // 출발
+            case "200" -> HapticType.START;
+
             // 직진
             case "11"  -> HapticType.GO_STRAIGHT;
             case "233" -> HapticType.GO_STRAIGHT;
@@ -193,48 +326,23 @@ public class RouteService {
             case "12"  -> HapticType.TURN_LEFT;
             case "16"  -> HapticType.TURN_LEFT;
             case "17"  -> HapticType.TURN_LEFT;
+            case "212"  -> HapticType.TURN_LEFT;
+            case "214"  -> HapticType.TURN_LEFT;
+            case "215"  -> HapticType.TURN_LEFT;
 
             // 우회전 계열
             case "13"  -> HapticType.TURN_RIGHT;
             case "18"  -> HapticType.TURN_RIGHT;
             case "19"  -> HapticType.TURN_RIGHT;
+            case "213"  -> HapticType.TURN_RIGHT;
+            case "216"  -> HapticType.TURN_RIGHT;
+            case "217"  -> HapticType.TURN_RIGHT;
 
             // 도착
             case "201" -> HapticType.ARRIVED;
 
             // 1~7, 경유지 등은 일단 직진으로 처리
             default    -> HapticType.GO_STRAIGHT;
-        };
-    }
-
-    // 1m 거리 계산 -> Haversine 공식 이용
-    private double[] calcNoticePoint(double fromX, double fromY,  // 이전 Point (경도, 위도)
-                                     double toX,   double toY,    // 현재 회전 Point (경도, 위도)
-                                     double noticeDistance) {
-        final int R = 6371000; // 지구 반지름
-
-        // 라디안으로 변환
-        double dLat = Math.toRadians(toY - fromY);
-        double dLon = Math.toRadians(toX - fromX);
-
-        // Haversine 공식
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(fromY)) * Math.cos(Math.toRadians(toY))
-                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-        // 두 점 사이의 실제 거리
-        double dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        // 두 점이 동일한 경우 회전 지점 좌표 그대로 반환
-        if (dist == 0) return new double[]{toX, toY};
-
-        // 전체 거리 중 noticeDistance가 차지하는 비율
-        double ratio = noticeDistance / dist;
-
-        // 회전 지점 noticeDistance 전 좌표
-        return new double[]{
-                toX - (toX - fromX) * ratio,  // noticePointX
-                toY - (toY - fromY) * ratio   // noticePointY
         };
     }
 }

@@ -29,3 +29,15 @@ logging:
 api:
   key: "ILzQCLjYOD4LLtSLW6pp76kmDw7LLa1z7quPigcd"
   base-url: https://apis.openapi.sk.com/tmap
+
+# ncp maps api (reverse geocoding)
+ncp:
+  maps:
+    client-id: "r68al6x3jb"
+    client-secret: "U5v0qkK9VC9mikeHicaCQPtaRYhxMLajWYBlsbT6"
+    reverse-geocode-url: https://maps.apigw.ntruss.com/map-reversegeocode/v2/gc
+
+# 임시: 인증 미구현 단계 - 하드코딩할 사용자 ID
+app:
+  temp:
+    default-user-id: 1

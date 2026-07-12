@@ -18,11 +18,12 @@ public class RouteController {
 
     private final RouteService tmapService;
 
-    @PostMapping("/route")
+    @PostMapping("/routes")
     public ResponseEntity<?> getPedestrianRoute(@RequestBody RouteRequest request) {
         RouteResponse result = tmapService.getPedestrianRoute(request);
 
         return ResponseEntity.ok(
                 ApiResponse.success("SUCCESS_GET_TMAP_API", "경로 조회 성공", result)
         );
-    }}
+    }
+}

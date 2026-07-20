@@ -2,6 +2,7 @@ package com.axis.nachimbal.domain.route.controller;
 
 import com.axis.nachimbal.domain.route.dto.RouteCreateRequest;
 import com.axis.nachimbal.domain.route.dto.RouteSummaryResponse;
+import com.axis.nachimbal.domain.route.entity.Route;
 import com.axis.nachimbal.domain.route.entity.RouteCategory;
 import com.axis.nachimbal.domain.route.service.ArchiveService;
 import com.axis.nachimbal.domain.route.dto.RouteDetailResponse;
@@ -50,4 +51,15 @@ public class ArchiveController {
     public ResponseEntity<String> handleNotFound(NoSuchElementException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
+
+    @PatchMapping("/{id}/favorite")
+    public ResponseEntity<RouteSummaryResponse> updateFavorite(
+            @PathVariable("id") Long id,
+            @RequestBody FavoriteRequest request) {
+        Route updated = routeService.updateFavorite(id, request.favorite());
+        return ResponseEntity.ok(RouteSummaryResponse.from(updated));
+    }
+
+    // 요청 body를 받을 DTO
+    public record FavoriteRequest(boolean favorite) {}
 }

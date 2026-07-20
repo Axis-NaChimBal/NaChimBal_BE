@@ -81,6 +81,14 @@ public class ArchiveService {
         return RouteDetailResponse.from(route);
     }
 
+    @Transactional
+    public Route updateFavorite(Long id, boolean favorite) {
+        Route route = routeRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("경로를 찾을 수 없습니다. id=" + id));
+        route.setFavorite(favorite);
+        return route; // JPA dirty checking으로 자동 UPDATE
+    }
+
     private String resolveAddress(RouteCreateRequest request) {
         PolylineCodec.LatLng first = PolylineCodec.firstPoint(request.getFullPath());
         Optional<String> address = geocodingService.reverseGeocode(first.lat(), first.lng());

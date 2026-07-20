@@ -49,6 +49,13 @@ public class Route {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "favorite", nullable = false)
+    private boolean favorite = false;
+
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
+    }
+
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orderIndex ASC")
     private List<Waypoint> waypoints = new ArrayList<>();

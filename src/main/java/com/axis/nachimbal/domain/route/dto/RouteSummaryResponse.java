@@ -15,6 +15,7 @@ public class RouteSummaryResponse {
     private String distance;
     private String address;
     private String imageUrl;
+    private boolean favorite;
 
     public static RouteSummaryResponse from(Route route) {
         return RouteSummaryResponse.builder()
@@ -23,6 +24,7 @@ public class RouteSummaryResponse {
                 .distance(formatDistance(route.getTotalDistanceKm()))
                 .address(route.getAddress())
                 .imageUrl(route.getImageUrl())
+                .favorite(route.isFavorite())
                 .build();
     }
 

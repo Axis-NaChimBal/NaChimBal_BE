@@ -11,7 +11,23 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    // 서버 오류
+
+    // [ 사용자/세션 조회 실패 (404) ]
+    // RunningSessionService에서 userId 또는 sessionId를 찾지 못할 때 발생
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiErrorResponse> handleIllegalArgument(
+            IllegalArgumentException e, HttpServletRequest request) {
+        log.warn("[Exception] IllegalArgumentException: {}", e.getMessage());
+        ApiErrorResponse response = ApiErrorResponse.of(
+                404,
+                request.getRequestURI(),
+                "NOT_FOUND",
+                e.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    // [ 서버 오류 (500) ]
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleException(Exception e, HttpServletRequest request) {
         ApiErrorResponse response = ApiErrorResponse.of(

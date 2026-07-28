@@ -37,7 +37,7 @@ public class Route {
     private Integer estimatedTimeSec;
 
     @Lob
-    @Column(name = "polyline", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "polyline", nullable = false, columnDefinition = "LONGTEXT")
     private String polyline;
 
     @Column(name = "image_url")

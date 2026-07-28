@@ -18,6 +18,11 @@ spring:
       hibernate:
         format_sql: true # SQL을 예쁘게 출력해줌.
     database-platform: org.hibernate.dialect.MySQLDialect
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
 
 logging:
   level:

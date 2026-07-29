@@ -28,7 +28,7 @@ public class User {
     @Column(name = "age", nullable = false)
     private Integer age;
 
-    // 안정 심박수 (bpm) - 최초 설정 시 밴드 센서로 측정 후 저장, 미측정 시 null
+    // 안정 심박수 (bpm) - 최초 측정 전 NULL
     @Column(name = "resting_hr")
     private Integer restingHr;
 
@@ -51,5 +51,10 @@ public class User {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    // 안정 심박수 업데이트 (온보딩 최초 저장 + 마이페이지 재측정 모두 사용)
+    public void updateRhr(int restingHr) {
+        this.restingHr = restingHr;
     }
 }

@@ -1,9 +1,12 @@
 package com.axis.nachimbal.domain.user.service;
 
+import com.axis.nachimbal.domain.user.dto.UpdateAgeRequest;
+import com.axis.nachimbal.domain.user.dto.UpdatePaceControlRequest;
 import com.axis.nachimbal.domain.user.dto.UpdateRhrRequest;
 import com.axis.nachimbal.domain.user.dto.UpdateRhrResponse;
 import com.axis.nachimbal.domain.user.entity.User;
 import com.axis.nachimbal.domain.user.repository.UserRepository;
+import com.axis.nachimbal.global.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class UserService {
 
     private final UserRepository userRepository;
@@ -30,5 +34,25 @@ public class UserService {
                 user.getId(), request.getRestingHr());
 
         return new UpdateRhrResponse(user.getId(), user.getRestingHr());
+    }
+
+    // 나이 입력
+    public Integer updateAge(Long userId, UpdateAgeRequest req) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("존재하지 않는 유저입니다."));
+
+        user.updateAge(req.getAge());
+
+        return req.getAge();
+    }
+
+    // 페이스 조절
+    public Boolean updatePaceControl(Long userId, UpdatePaceControlRequest req) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("존재하지 않는 유저입니다."));
+
+        user.updatePaceControl(req.getPaceControlEnabled());
+
+        return req.getPaceControlEnabled();
     }
 }

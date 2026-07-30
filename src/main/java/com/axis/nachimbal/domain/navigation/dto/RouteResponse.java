@@ -29,10 +29,6 @@ public class RouteResponse {
         private double pointY;
         private int distance;
 
-        // 햅틱 알림 좌표
-        private double noticePointX;
-        private double noticePointY;
-
         // 햅틱 패턴
         private HapticType hapticType;
     }

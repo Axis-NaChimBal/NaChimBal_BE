@@ -5,12 +5,15 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
 
@@ -36,6 +39,7 @@ public class User {
     @Column(name = "pace_control_enabled", nullable = false)
     private Boolean paceControlEnabled = true;
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -56,5 +60,13 @@ public class User {
     // 안정 심박수 업데이트 (온보딩 최초 저장 + 마이페이지 재측정 모두 사용)
     public void updateRhr(int restingHr) {
         this.restingHr = restingHr;
+    }
+
+    public void updateAge(int age) {
+        this.age = age;
+    }
+
+    public void updatePaceControl(boolean paceControlEnabled) {
+        this.paceControlEnabled = paceControlEnabled;
     }
 }

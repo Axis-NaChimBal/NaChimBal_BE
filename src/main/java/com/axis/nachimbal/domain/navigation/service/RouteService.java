@@ -31,8 +31,6 @@ public class RouteService {
     @Value("${api.base-url}")
     private String BASEURL;
 
-    private static final double NOTICE_DISTANCE = 5.0;
-
     private final ObjectMapper objectMapper;
 
     private final HttpClient httpClient = HttpClient.newBuilder()
@@ -141,25 +139,8 @@ public class RouteService {
             String description = props.path("description").asText("");
             String turnType = props.path("turnType").asText("");
 
-            // 1) incomingLine 찾기 -> noticePoint 계산용
-            JsonNode incomingLine = findPreviousLineString(featureList, i);
 
-            double noticePointX = pointX;
-            double noticePointY = pointY;
-
-            if (incomingLine != null) {
-                List<RouteResponse.Coordinate> incomingPolyline = extractCoordinates(incomingLine.path("geometry").path("coordinates"));
-
-                if (!incomingPolyline.isEmpty()) {
-                    RouteResponse.Coordinate noticePoint =
-                            calcNoticePointFromPolyline(incomingPolyline, pointX, pointY, NOTICE_DISTANCE);
-
-                    noticePointX = noticePoint.getX();
-                    noticePointY = noticePoint.getY();
-                }
-            }
-
-            // 2) outgoingLines 거리 합산 -> 현재 Point 이후 다음 Point 전까지
+            // outgoingLines 거리 합산 -> 현재 Point 이후 다음 Point 전까지
             int distanceToNextPoint = 0;
             for (int j = i + 1; j < featureList.size(); j++) {
                 JsonNode next = featureList.get(j);
@@ -178,8 +159,6 @@ public class RouteService {
                     .pointX(pointX)
                     .pointY(pointY)
                     .distance(distanceToNextPoint)
-                    .noticePointX(noticePointX)
-                    .noticePointY(noticePointY)
                     .hapticType(resolveHapticType(turnType))
                     .build());
         }
@@ -187,7 +166,6 @@ public class RouteService {
         return RouteResponse.builder()
                 .totalDistance(totalDistance)
                 .totalTime(totalTime)
-                .noticeDistance(NOTICE_DISTANCE)
                 .steps(steps)
                 .fullPath(fullPath)
                 .build();
@@ -227,53 +205,6 @@ public class RouteService {
         }
 
         return result;
-    }
-
-    // noticePoint 계산
-    private RouteResponse.Coordinate calcNoticePointFromPolyline(
-            List<RouteResponse.Coordinate> polyline,
-            double pointX,
-            double pointY,
-            double noticeDistance
-    ) {
-        // 안전 처리
-        if (polyline == null || polyline.isEmpty()) {
-            return new RouteResponse.Coordinate(pointX, pointY);
-        }
-
-        if (polyline.size() == 1) {
-            return polyline.get(0);
-        }
-
-        // turnPoint에 가장 가까운 점을 찾아서 거기서부터 역추적
-        double remaining = noticeDistance;
-
-        int startIndex = findClosestIndex(polyline, pointX, pointY);
-        for (int i = startIndex; i > 0; i--) {
-            RouteResponse.Coordinate to = polyline.get(i);
-            RouteResponse.Coordinate from = polyline.get(i - 1);
-
-            double segmentDistance = distanceMeters(from.getX(), from.getY(), to.getX(), to.getY());
-
-            if (segmentDistance <= 0) {
-                continue;
-            }
-
-            if (remaining <= segmentDistance) {
-                // 현재 선분 안에서 notice point를 찾을 수 있음
-                double ratio = remaining / segmentDistance;
-
-                double noticeX = to.getX() - (to.getX() - from.getX()) * ratio;
-                double noticeY = to.getY() - (to.getY() - from.getY()) * ratio;
-
-                return new RouteResponse.Coordinate(noticeX, noticeY);
-            }
-
-            remaining -= segmentDistance;
-        }
-
-        // noticeDistance가 incoming polyline 전체 길이보다 길면 시작점으로 clamp
-        return polyline.get(0);
     }
 
     // 거리 계산 -> 하버사인

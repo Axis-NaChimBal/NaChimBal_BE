@@ -1,5 +1,7 @@
 package com.axis.nachimbal.domain.running.controller;
 
+import com.axis.nachimbal.domain.running.dto.SessionDataRequest;
+import com.axis.nachimbal.domain.running.dto.SessionDataResponse;
 import com.axis.nachimbal.domain.running.dto.SessionEndRequest;
 import com.axis.nachimbal.domain.running.dto.SessionStartRequest;
 import com.axis.nachimbal.domain.running.dto.SessionStartResponse;
@@ -30,6 +32,20 @@ public class RunningSessionController {
         return ResponseEntity.ok(
                 ApiResponse.success("SESSION_STARTED", "세션이 시작되었습니다.", response)
         );
+    }
+
+    // [ 러닝 중 데이터 처리 API ]
+    // 주의: FE가 ApiResponse 래핑 없이 label/idealPace를 최상위에서 바로 파싱하므로
+    //       SessionDataResponse를 그대로 반환 (ApiResponse로 감싸지 않음)
+    @PostMapping("/data")
+    public ResponseEntity<SessionDataResponse> processSessionData(
+            @RequestBody SessionDataRequest request) {
+
+        log.debug("[API] POST /api/running/session/data: sessionId={} currentElapsed={} windowSize={}",
+                request.getSessionId(), request.getCurrentElapsed(), request.getWindow().size());
+
+        SessionDataResponse response = runningSessionService.processSessionData(request);
+        return ResponseEntity.ok(response);
     }
 
     // [ 세션 종료 API ]

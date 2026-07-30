@@ -1,6 +1,6 @@
 package com.axis.nachimbal.domain.streak.entity;
 
-import com.axis.nachimbal.domain.session.entity.ExerciseSession;
+import com.axis.nachimbal.domain.running.entity.ExerciseSession;
 import com.axis.nachimbal.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -31,9 +31,7 @@ public class RunningStreak {
     @JoinColumn(name = "session_id", nullable = false)
     private ExerciseSession session;
 
-    public static RunningStreak create(User user,
-                                       LocalDate exerciseDate,
-                                       ExerciseSession session) {
+    public static RunningStreak create(User user, LocalDate exerciseDate, ExerciseSession session) {
         RunningStreak s = new RunningStreak();
         s.user         = user;
         s.exerciseDate = exerciseDate;

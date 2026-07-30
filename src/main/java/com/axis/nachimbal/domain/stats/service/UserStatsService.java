@@ -3,8 +3,8 @@ package com.axis.nachimbal.domain.stats.service;
 import com.axis.nachimbal.domain.challenge.entity.ChallengeGoal;
 import com.axis.nachimbal.domain.challenge.enums.PeriodType;
 import com.axis.nachimbal.domain.challenge.repository.ChallengeGoalRepository;
-import com.axis.nachimbal.domain.session.entity.ExerciseSession;
-import com.axis.nachimbal.domain.session.repository.ExerciseSessionRepository;
+import com.axis.nachimbal.domain.result.entity.ExerciseResult;
+import com.axis.nachimbal.domain.result.repository.ExerciseResultRepository;
 import com.axis.nachimbal.domain.stats.dto.UserStatsResponse;
 import com.axis.nachimbal.domain.streak.repository.RunningStreakRepository;
 import com.axis.nachimbal.domain.user.entity.User;
@@ -24,7 +24,7 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public class UserStatsService {
 
-    private final ExerciseSessionRepository exerciseSessionRepository;
+    private final ExerciseResultRepository exerciseResultRepository;
     private final UserRepository userRepository;
     private final RunningStreakRepository streakRepository;
     private final ChallengeGoalRepository challengeGoalRepository;
@@ -32,17 +32,17 @@ public class UserStatsService {
     // 운동 데이터 조회
     public UserStatsResponse getStats(Long userId) {
 
-        List<ExerciseSession> results = exerciseSessionRepository.findAllByUserId(userId);
+        List<ExerciseResult> results = exerciseResultRepository.findAllBySession_UserId(userId);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("존재하지 않는 유저입니다."));
 
         // 평균/최고 계산
-        double avgDist  = results.stream().mapToDouble(ExerciseSession::getDistance).average().orElse(0);
-        int    avgDur   = (int) results.stream().mapToInt(ExerciseSession::getDurationSec).average().orElse(0);
-        double avgSpeed = results.stream().mapToDouble(ExerciseSession::getAvgSpeed).average().orElse(0);
-        double maxRec   = results.stream().mapToDouble(ExerciseSession::getDistance).max().orElse(0);
-        double totalDist = results.stream().mapToDouble(ExerciseSession::getDistance).sum();
+        double avgDist   = results.stream().mapToDouble(ExerciseResult::getDistanceKm).average().orElse(0);
+        int    avgDur    = (int) results.stream().mapToInt(ExerciseResult::getDurationSec).average().orElse(0);
+        double avgSpeed  = results.stream().mapToDouble(ExerciseResult::getAvgSpeedKmh).average().orElse(0);
+        double maxRec    = results.stream().mapToDouble(ExerciseResult::getDistanceKm).max().orElse(0);
+        double totalDist = results.stream().mapToDouble(ExerciseResult::getDistanceKm).sum();
 
         // 이번 달 달린 거리
         YearMonth now        = YearMonth.now();
@@ -51,10 +51,10 @@ public class UserStatsService {
 
         double monthlyDist = results.stream()
                 .filter(r -> {
-                    LocalDate d = r.getStartedAt().toLocalDate();
+                    LocalDate d = r.getSession().getStartedAt().toLocalDate();
                     return !d.isBefore(monthStart) && !d.isAfter(monthEnd);
                 })
-                .mapToDouble(ExerciseSession::getDistance)
+                .mapToDouble(ExerciseResult::getDistanceKm)
                 .sum();
 
         // 월간 목표 달성률
@@ -67,22 +67,19 @@ public class UserStatsService {
 
         // 달력 기록
         List<String> streaks = streakRepository.findAllByUserId(userId)
-                .stream()
-                .map(s -> s.getExerciseDate().toString())
-                .toList();
+                .stream().map(s -> s.getExerciseDate().toString()).toList();
 
         // 목표값
         Double weeklyGoal  = challengeGoalRepository
                 .findByUserIdAndPeriodType(userId, PeriodType.WEEKLY)
                 .map(ChallengeGoal::getGoalDistance).orElse(null);
-        Double monthlyGoal = monthlyGoalOpt
-                .map(ChallengeGoal::getGoalDistance).orElse(null);
+        Double monthlyGoal = monthlyGoalOpt.map(ChallengeGoal::getGoalDistance).orElse(null);
 
         return UserStatsResponse.builder()
                 .age(user.getAge())
-                .paceControlEnabled(user.isPaceControlEnabled())
+                .paceControlEnabled(user.getPaceControlEnabled())
                 .monthlyGoalPercent(Math.round(monthlyGoalPercent * 10.0) / 10.0)
-                .avgDistance(Math.round(avgDist  * 10.0) / 10.0)
+                .avgDistance(Math.round(avgDist * 10.0) / 10.0)
                 .avgDurationSec(avgDur)
                 .avgSpeed(Math.round(avgSpeed * 10.0) / 10.0)
                 .maxRecord(Math.round(maxRec * 10.0) / 10.0)

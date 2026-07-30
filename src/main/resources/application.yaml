@@ -41,3 +41,8 @@ ncp:
 app:
   temp:
     default-user-id: 1
+
+# AI 서버 주소 (로컬)
+ai:
+  server:
+    url: http://localhost:8000

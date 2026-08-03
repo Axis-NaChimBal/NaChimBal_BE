@@ -78,6 +78,7 @@ public class UserStatsService {
         return UserStatsResponse.builder()
                 .age(user.getAge())
                 .paceControlEnabled(user.getPaceControlEnabled())
+                .restingHr(user.getRestingHr())
                 .monthlyGoalPercent(Math.round(monthlyGoalPercent * 10.0) / 10.0)
                 .avgDistance(Math.round(avgDist * 10.0) / 10.0)
                 .avgDurationSec(avgDur)

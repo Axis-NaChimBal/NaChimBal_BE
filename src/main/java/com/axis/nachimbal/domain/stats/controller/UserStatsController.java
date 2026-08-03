@@ -19,7 +19,7 @@ public class UserStatsController {
 
     // 운동 데이터 조회
     @GetMapping("/{userId}")
-    public ResponseEntity<?> getStats(@PathVariable Long userId) {
+    public ResponseEntity<?> getStats(@PathVariable("userId") Long userId) {
         UserStatsResponse result = statsService.getStats(userId);
 
         return ResponseEntity.ok(

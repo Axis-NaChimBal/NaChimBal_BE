@@ -39,6 +39,10 @@ public class User {
     @Column(name = "pace_control_enabled", nullable = false)
     private Boolean paceControlEnabled = true;
 
+    // 실측 보폭 (m)
+    @Column(name = "stride_length")
+    private Double strideLength;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -69,4 +73,7 @@ public class User {
     public void updatePaceControl(boolean paceControlEnabled) {
         this.paceControlEnabled = paceControlEnabled;
     }
+
+    // 보폭 업데이트
+    public void updateStride(double strideLength) { this.strideLength = strideLength; }
 }

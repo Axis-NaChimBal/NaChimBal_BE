@@ -1,9 +1,6 @@
 package com.axis.nachimbal.domain.user.service;
 
-import com.axis.nachimbal.domain.user.dto.UpdateAgeRequest;
-import com.axis.nachimbal.domain.user.dto.UpdatePaceControlRequest;
-import com.axis.nachimbal.domain.user.dto.UpdateRhrRequest;
-import com.axis.nachimbal.domain.user.dto.UpdateRhrResponse;
+import com.axis.nachimbal.domain.user.dto.*;
 import com.axis.nachimbal.domain.user.entity.User;
 import com.axis.nachimbal.domain.user.repository.UserRepository;
 import com.axis.nachimbal.global.exception.UserNotFoundException;
@@ -54,5 +51,16 @@ public class UserService {
         user.updatePaceControl(req.getPaceControlEnabled());
 
         return req.getPaceControlEnabled();
+    }
+
+    // 보폭 업데이트
+    @Transactional
+    public void updateStride(UpdateStrideRequest request) {
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "사용자를 찾을 수 없습니다. userId=" + request.getUserId()));
+        user.updateStride(request.getStrideLength());
+        log.info("[Stride] 보폭 저장: userId={} strideLength={}m",
+                user.getId(), request.getStrideLength());
     }
 }

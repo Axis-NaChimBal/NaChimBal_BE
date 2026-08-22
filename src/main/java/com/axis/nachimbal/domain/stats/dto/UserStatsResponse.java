@@ -12,6 +12,7 @@ public class UserStatsResponse {
     private Integer age;
     private boolean paceControlEnabled;
     private Integer restingHr;
+    private Double strideLength;
     private double       monthlyGoalPercent;
     private double       avgDistance;
     private int          avgDurationSec;

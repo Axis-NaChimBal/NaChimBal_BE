@@ -4,6 +4,7 @@ import com.axis.nachimbal.domain.user.dto.UpdateAgeRequest;
 import com.axis.nachimbal.domain.user.dto.UpdatePaceControlRequest;
 import com.axis.nachimbal.domain.user.dto.UpdateRhrRequest;
 import com.axis.nachimbal.domain.user.dto.UpdateRhrResponse;
+import com.axis.nachimbal.domain.user.dto.UpdateStrideRequest;
 import com.axis.nachimbal.domain.user.service.UserService;
 import com.axis.nachimbal.global.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +58,18 @@ public class UserController {
 
         return ResponseEntity.ok(
                 ApiResponse.success("SUCCESS_SAVE_PACE_CONTROL", "페이스 조절 여부를 저장했습니다.", "페이스 조절 = " + result)
+        );
+    }
+
+    // 보폭 업데이트 API
+    @PutMapping("/stride")
+    public ResponseEntity<ApiResponse<Void>> updateStride(
+            @RequestBody UpdateStrideRequest request) {
+        log.debug("[API] PUT /api/user/stride: userId={} strideLength={}",
+                request.getUserId(), request.getStrideLength());
+        userService.updateStride(request);
+        return ResponseEntity.ok(
+                ApiResponse.success("STRIDE_UPDATED", "보폭이 저장되었습니다.")
         );
     }
 }

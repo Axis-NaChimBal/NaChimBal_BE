@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -19,8 +20,12 @@ public class UserStatsController {
 
     // 운동 데이터 조회
     @GetMapping("/{userId}")
-    public ResponseEntity<?> getStats(@PathVariable("userId") Long userId) {
-        UserStatsResponse result = statsService.getStats(userId);
+    public ResponseEntity<?> getStats(
+            @PathVariable("userId") Long userId,
+            @RequestParam(value = "year", required = false) Integer year,
+            @RequestParam(value = "month", required = false) Integer month
+    ) {
+        UserStatsResponse result = statsService.getStats(userId, year, month);
 
         return ResponseEntity.ok(
                 ApiResponse.success("SUCCESS_GET_STATS", "운동 데이터를 조회했습니다.", result)

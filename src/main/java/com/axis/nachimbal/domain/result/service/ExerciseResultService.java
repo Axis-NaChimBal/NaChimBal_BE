@@ -5,7 +5,7 @@ import com.axis.nachimbal.domain.result.dto.ResultSaveResponse;
 import com.axis.nachimbal.domain.result.entity.ExerciseResult;
 import com.axis.nachimbal.domain.result.repository.ExerciseResultRepository;
 import com.axis.nachimbal.domain.running.entity.ExerciseSession;
-import com.axis.nachimbal.domain.running.repository.ExerciseSessionRepository; // 팀원 레포지토리
+import com.axis.nachimbal.domain.running.repository.ExerciseSessionRepository;
 import com.axis.nachimbal.domain.streak.entity.RunningStreak;
 import com.axis.nachimbal.domain.streak.repository.RunningStreakRepository;
 import com.axis.nachimbal.domain.user.entity.User;

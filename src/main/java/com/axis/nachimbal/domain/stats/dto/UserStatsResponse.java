@@ -22,4 +22,7 @@ public class UserStatsResponse {
     private List<String> streaks;
     private Double       weeklyGoal;
     private Double       monthlyGoal;
+    private double        weeklyDistance;
+    private boolean       weeklyGoalAchieved;
+    private int           streakDays;
 }

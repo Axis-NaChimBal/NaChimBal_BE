@@ -1,5 +1,6 @@
 package com.axis.nachimbal.global.exception;
 
+import com.axis.nachimbal.domain.chatbot.exception.OpenAiApiException;
 import com.axis.nachimbal.global.dto.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,18 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    // [ AI 챗봇 API 호출 오류 (502) ]
+    @ExceptionHandler(OpenAiApiException.class)
+    public ResponseEntity<ApiErrorResponse> handleOpenAiApiException(OpenAiApiException e, HttpServletRequest request) {
+        ApiErrorResponse response = ApiErrorResponse.of(
+                502,
+                request.getRequestURI(),
+                "CHATBOT_UPSTREAM_ERROR",
+                "AI 코치 응답을 가져오는 데 실패했습니다. 잠시 후 다시 시도해주세요."
+        );
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(response);
+    }
 
     // [ 사용자/세션 조회 실패 (404) ]
     // RunningSessionService에서 userId 또는 sessionId를 찾지 못할 때 발생

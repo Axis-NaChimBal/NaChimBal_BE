@@ -7,8 +7,8 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/nachimbaldb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: root
-    password: root # 본인의 MySQL 비밀번호
+    username: nachimbal
+    password: nachimbal1! # 본인의 MySQL 비밀번호
   jpa:
     hibernate:
       ddl-auto: update
@@ -49,3 +49,10 @@ app:
 ai:
   server:
     url: http://localhost:8000
+
+# OpenAPI
+openai:
+  api:
+    key: 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
+  model: gpt-5.5
+  base-url: https://api.openai.com/v1/chat/completions

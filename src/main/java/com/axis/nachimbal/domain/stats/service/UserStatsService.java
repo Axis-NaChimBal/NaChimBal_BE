@@ -120,6 +120,8 @@ public class UserStatsService {
                 .age(user.getAge())
                 .paceControlEnabled(user.getPaceControlEnabled())
                 .restingHr(user.getRestingHr())
+                .strideLength(user.getStrideLength())
+                .exerciseGoal(user.getExerciseGoal())
                 .monthlyGoalPercent(Math.round(monthlyGoalPercent * 10.0) / 10.0)
                 .avgDistance(Math.round(avgDist * 10.0) / 10.0)
                 .avgDurationSec(avgDur)

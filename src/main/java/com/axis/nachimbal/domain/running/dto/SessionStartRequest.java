@@ -22,4 +22,10 @@ public class SessionStartRequest {
 
     // TMAP API로 계산된 경로 거리 (km 단위)
     private Double routeDistance;
+
+    //목표페이스메이커에서 사용
+    private Double targetSpeedKmh;
+
+    // 페이스 모드 — "AI" | "TARGET" | "NONE". AI 서버 세션 등록 여부 판단에 사용.
+    private String paceMode;
 }

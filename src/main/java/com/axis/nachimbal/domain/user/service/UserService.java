@@ -53,6 +53,16 @@ public class UserService {
         return req.getPaceControlEnabled();
     }
 
+    // 운동목표
+    public String updateExerciseGoal(Long userId, UpdateExerciseGoalRequest req) {
+        User user = userRepository.findById(userId)
+               .orElseThrow(() -> new UserNotFoundException("존재하지 않는 유저입니다."));
+
+        user.updateExerciseGoal(req.getExerciseGoal());
+
+        return req.getExerciseGoal().name();
+    }
+
     // 보폭 업데이트
     @Transactional
     public void updateStride(UpdateStrideRequest request) {

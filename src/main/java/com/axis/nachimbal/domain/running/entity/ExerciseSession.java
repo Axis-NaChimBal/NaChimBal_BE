@@ -40,6 +40,10 @@ public class ExerciseSession {
     @Column(name = "total_time_sec")
     private Integer totalTimeSec;
 
+    // 목표 속도 (km/h) - TARGET 모드일 때만 값 존재
+    @Column(name = "target_speed_kmh")
+    private Double targetSpeedKmh;
+
     // 세션 상태: READY → ACTIVE → ENDED
     @Enumerated(EnumType.STRING)
     @Column(name = "session_status", nullable = false, length = 10)
@@ -53,12 +57,13 @@ public class ExerciseSession {
 
     @Builder
     public ExerciseSession(Long userId, Long routeId, GoalType exerciseGoal,
-                           Double routeDistanceKm, Integer totalTimeSec) {
+                           Double routeDistanceKm, Integer totalTimeSec, Double targetSpeedKmh) {
         this.userId = userId;
         this.routeId = routeId;
         this.exerciseGoal = exerciseGoal;
         this.routeDistanceKm = routeDistanceKm;
         this.totalTimeSec = totalTimeSec;
+        this.targetSpeedKmh = targetSpeedKmh;
         this.sessionStatus = SessionStatus.ACTIVE;
     }
 

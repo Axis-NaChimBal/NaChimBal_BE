@@ -42,6 +42,16 @@ public class ExerciseResultService {
                 req.getDurationSec(),
                 req.getAvgSpeed()
         );
+
+        // 심박수 / 칼로리 / 페이스 조절 횟수 반영
+        result.updateVitals(
+                req.getAvgHeartRate(),
+                req.getMaxHeartRate(),
+                req.getMinHeartRate(),
+                req.getCaloriesKcal()
+        );
+        result.updatePaceAdjustCount(req.getPaceAdjustCount());
+
         resultRepository.save(result);
 
         // ③ 스트릭 기록: userId/exerciseDate를 요청값이 아니라 session에서 그대로 꺼내 씀
@@ -65,7 +75,12 @@ public class ExerciseResultService {
                 sessionId,
                 result.getDistanceKm(),
                 result.getDurationSec(),
-                result.getAvgSpeedKmh()
+                result.getAvgSpeedKmh(),
+                result.getAvgHeartRate(),
+                result.getMaxHeartRate(),
+                result.getMinHeartRate(),
+                result.getCaloriesKcal(),
+                result.getPaceAdjustCount()
         );
     }
 }

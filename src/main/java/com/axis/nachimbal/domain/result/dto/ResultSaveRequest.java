@@ -13,4 +13,14 @@ public class ResultSaveRequest {
     private Integer durationSec;
     @NotNull
     private Double avgSpeed;
+    @NotNull
+    private Integer avgHeartRate;
+    @NotNull
+    private Integer maxHeartRate;
+    @NotNull
+    private Integer minHeartRate;
+    @NotNull
+    private Double caloriesKcal;
+    @NotNull
+    private Integer paceAdjustCount;
 }

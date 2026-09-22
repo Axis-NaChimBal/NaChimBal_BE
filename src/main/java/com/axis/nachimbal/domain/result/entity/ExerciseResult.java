@@ -32,20 +32,19 @@ public class ExerciseResult {
     @Column(name = "avg_speed_kmh", nullable = false)
     private Double avgSpeedKmh;
 
-    // 심박수/칼로리 — 값 출처 확정 전이라 nullable, 계산 로직 붙기 전까지 null
-    @Column(name = "avg_heart_rate")
+    @Column(name = "avg_heart_rate", nullable = false)
     private Integer avgHeartRate;
 
-    @Column(name = "max_heart_rate")
+    @Column(name = "max_heart_rate", nullable = false)
     private Integer maxHeartRate;
 
-    @Column(name = "min_heart_rate")
+    @Column(name = "min_heart_rate", nullable = false)
     private Integer minHeartRate;
 
-    @Column(name = "calories_kcal")
+    @Column(name = "calories_kcal", nullable = false)
     private Double caloriesKcal;
 
-    @Column(name = "pace_adjust_count")
+    @Column(name = "pace_adjust_count", nullable = false)
     private Integer paceAdjustCount;
 
     @Column(name = "gps_track", columnDefinition = "TEXT")
@@ -74,5 +73,10 @@ public class ExerciseResult {
         this.maxHeartRate = maxHeartRate;
         this.minHeartRate = minHeartRate;
         this.caloriesKcal = caloriesKcal;
+    }
+
+    // 페이스 조절 횟수 저장용 setter
+    public void updatePaceAdjustCount(Integer paceAdjustCount) {
+        this.paceAdjustCount = paceAdjustCount;
     }
 }

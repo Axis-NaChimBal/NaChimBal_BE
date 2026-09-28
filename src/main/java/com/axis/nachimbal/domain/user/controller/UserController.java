@@ -2,6 +2,7 @@ package com.axis.nachimbal.domain.user.controller;
 
 import com.axis.nachimbal.domain.user.dto.UpdateAgeRequest;
 import com.axis.nachimbal.domain.user.dto.UpdatePaceControlRequest;
+import com.axis.nachimbal.domain.user.dto.UpdateExerciseGoalRequest;
 import com.axis.nachimbal.domain.user.dto.UpdateRhrRequest;
 import com.axis.nachimbal.domain.user.dto.UpdateRhrResponse;
 import com.axis.nachimbal.domain.user.dto.UpdateStrideRequest;
@@ -58,6 +59,16 @@ public class UserController {
 
         return ResponseEntity.ok(
                 ApiResponse.success("SUCCESS_SAVE_PACE_CONTROL", "페이스 조절 여부를 저장했습니다.", "페이스 조절 = " + result)
+        );
+    }
+
+    // 운동목표 업데이트
+     @PatchMapping("/{userId}/exerciseGoal")
+    public ResponseEntity<?> updateExerciseGoal(
+            @PathVariable("userId") Long userId,
+            @RequestBody @Validated UpdateExerciseGoalRequest req
+    ) { String result = userService.updateExerciseGoal(userId, req);
+        return ResponseEntity.ok(ApiResponse.success("SUCCESS_SAVE_EXERCISE_GOAL", "운동목표를 저장했습니다.", "운동목표 = " + result)
         );
     }
 

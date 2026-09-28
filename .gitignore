@@ -38,6 +38,8 @@ out/
 
 # Sensitive configuration files
 application.yaml
+application.yml
 application.properties
 *.yaml
+*.yml
 *.properties

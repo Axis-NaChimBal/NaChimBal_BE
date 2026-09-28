@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import com.axis.nachimbal.domain.running.entity.GoalType;
 
 import java.time.LocalDateTime;
 
@@ -38,6 +39,11 @@ public class User {
     // 페이스 조절 ON/OFF
     @Column(name = "pace_control_enabled", nullable = false)
     private Boolean paceControlEnabled = true;
+
+    // 운동 목표 (설정 화면에서 미리 선택, AI 페이스 조절 모드에 사용)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "exercise_goal", length = 30)
+    private GoalType exerciseGoal = GoalType.BEGINNER; //기본값
 
     // 실측 보폭 (m)
     @Column(name = "stride_length")
@@ -73,6 +79,9 @@ public class User {
     public void updatePaceControl(boolean paceControlEnabled) {
         this.paceControlEnabled = paceControlEnabled;
     }
+
+    // 운동목표 업데이트
+    public void updateExerciseGoal(GoalType exerciseGoal) { this.exerciseGoal = exerciseGoal; }
 
     // 보폭 업데이트
     public void updateStride(double strideLength) { this.strideLength = strideLength; }

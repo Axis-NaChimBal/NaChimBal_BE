@@ -2,6 +2,7 @@ package com.axis.nachimbal.domain.stats.dto;
 
 import lombok.Builder;
 import lombok.Getter;
+import com.axis.nachimbal.domain.running.entity.GoalType;
 
 import java.util.List;
 
@@ -13,6 +14,7 @@ public class UserStatsResponse {
     private boolean paceControlEnabled;
     private Integer restingHr;
     private Double strideLength;
+    private GoalType exerciseGoal;
     private double       monthlyGoalPercent;
     private double       avgDistance;
     private int          avgDurationSec;
@@ -22,4 +24,7 @@ public class UserStatsResponse {
     private List<String> streaks;
     private Double       weeklyGoal;
     private Double       monthlyGoal;
+    private double        weeklyDistance;
+    private boolean       weeklyGoalAchieved;
+    private int           streakDays;
 }

@@ -20,7 +20,7 @@ public class ExerciseResultController {
     // 운동 결과 저장: userId 대신 sessionId를 경로로 받음
     @PostMapping("/{sessionId}/result")
     public ResponseEntity<?> saveResult(
-            @PathVariable Long sessionId,
+            @PathVariable("sessionId") Long sessionId,
             @RequestBody @Validated ResultSaveRequest req
     ) {
         ResultSaveResponse result = resultService.saveResult(sessionId, req);

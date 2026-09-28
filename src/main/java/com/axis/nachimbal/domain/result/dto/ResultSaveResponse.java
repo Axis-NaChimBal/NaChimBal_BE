@@ -10,4 +10,9 @@ public class ResultSaveResponse {
     private Double distanceKm;
     private Integer durationSec;
     private Double avgSpeedKmh;
+    private Integer avgHeartRate;
+    private Integer maxHeartRate;
+    private Integer minHeartRate;
+    private Double caloriesKcal;
+    private Integer paceAdjustCount;
 }

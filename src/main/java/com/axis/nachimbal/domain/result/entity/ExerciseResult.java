@@ -1,6 +1,6 @@
 package com.axis.nachimbal.domain.result.entity;
 
-import com.axis.nachimbal.domain.running.entity.ExerciseSession; // 팀원이 만든 세션 엔티티를 그대로 참조
+import com.axis.nachimbal.domain.running.entity.ExerciseSession;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -9,7 +9,6 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
-// [ 운동 결과 Entity ] : ERD 6번 exercise_results, ExerciseSession과 1:1
 @Entity
 @Table(name = "exercise_results")
 @Getter
@@ -33,8 +32,23 @@ public class ExerciseResult {
     @Column(name = "avg_speed_kmh", nullable = false)
     private Double avgSpeedKmh;
 
-    // 심박수/칼로리/페이스조절횟수/GPS트랙은 값 출처 확정 전이라 아직 미포함
-    // (avg_heart_rate, max_heart_rate, min_heart_rate, calories_kcal, pace_adjust_count, gps_track)
+    @Column(name = "avg_heart_rate", nullable = false)
+    private Integer avgHeartRate;
+
+    @Column(name = "max_heart_rate", nullable = false)
+    private Integer maxHeartRate;
+
+    @Column(name = "min_heart_rate", nullable = false)
+    private Integer minHeartRate;
+
+    @Column(name = "calories_kcal", nullable = false)
+    private Double caloriesKcal;
+
+    @Column(name = "pace_adjust_count", nullable = false)
+    private Integer paceAdjustCount;
+
+    @Column(name = "gps_track", columnDefinition = "TEXT")
+    private String gpsTrack;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -50,5 +64,19 @@ public class ExerciseResult {
         r.durationSec = durationSec;
         r.avgSpeedKmh = avgSpeedKmh;
         return r;
+    }
+
+    // 심박수/칼로리 등 나중에 채워넣을 때 쓸 setter 메서드
+    public void updateVitals(Integer avgHeartRate, Integer maxHeartRate,
+                             Integer minHeartRate, Double caloriesKcal) {
+        this.avgHeartRate = avgHeartRate;
+        this.maxHeartRate = maxHeartRate;
+        this.minHeartRate = minHeartRate;
+        this.caloriesKcal = caloriesKcal;
+    }
+
+    // 페이스 조절 횟수 저장용 setter
+    public void updatePaceAdjustCount(Integer paceAdjustCount) {
+        this.paceAdjustCount = paceAdjustCount;
     }
 }

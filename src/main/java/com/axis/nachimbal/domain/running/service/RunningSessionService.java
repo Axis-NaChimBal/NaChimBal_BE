@@ -41,20 +41,32 @@ public class RunningSessionService {
         };
     }
 
+    private static Double resolveSpeedMpsOrNull(SessionStartRequest request) {
+        if (request.getGoal() != null) {
+            return getSpeedMps(request.getGoal());
+        }
+        if (request.getTargetSpeedKmh() != null) {
+            return request.getTargetSpeedKmh() / 3.6;
+        }
+        return null;
+    }
+
     // [ 세션 시작 ]
     @Transactional
     public SessionStartResponse startSession(SessionStartRequest request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException(
                         "사용자를 찾을 수 없습니다. userId=" + request.getUserId()));
-
-        double speedMps  = getSpeedMps(request.getGoal());
-        int totalTimeSec = (int) Math.round((request.getRouteDistance() * 1000) / speedMps);
+        Double speedMps = resolveSpeedMpsOrNull(request);
+        Integer totalTimeSec = (speedMps != null)
+                ? (int) Math.round((request.getRouteDistance() * 1000) / speedMps)
+                : null;
         int hrRest = user.getRestingHr() != null ? user.getRestingHr() : 60;
 
         ExerciseSession session = ExerciseSession.builder()
                 .userId(user.getId())
                 .exerciseGoal(request.getGoal())
+                .targetSpeedKmh(request.getTargetSpeedKmh())
                 .routeDistanceKm(request.getRouteDistance())
                 .totalTimeSec(totalTimeSec)
                 .build();
@@ -64,8 +76,10 @@ public class RunningSessionService {
         log.info("[Session] 세션 시작: sessionId={} userId={} goal={} totalTimeSec={}",
                 saved.getId(), user.getId(), request.getGoal(), totalTimeSec);
 
-        // AI 서버에 세션 등록 (target_zone 없음, resting_hr/age/target_duration만 전달)
-        aiServerClient.initSession(saved.getId(), hrRest, user.getAge(), totalTimeSec);
+        // AI 페이스 조절 모드일 때만 AI 서버에 세션 등록 (명시적 paceMode로 판단)(target_zone 없음, resting_hr/age/target_duration만 전달)
+        if ("AI".equals(request.getPaceMode())) {
+            aiServerClient.initSession(saved.getId(), hrRest, user.getAge(), totalTimeSec);
+        }
 
         return new SessionStartResponse(saved.getId(), totalTimeSec, "started");
     }

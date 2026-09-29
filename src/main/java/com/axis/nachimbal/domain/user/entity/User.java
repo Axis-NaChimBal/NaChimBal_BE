@@ -57,7 +57,7 @@ public class User {
     // 운동 목표 (설정 화면에서 미리 선택, AI 페이스 조절 모드에 사용)
     @Enumerated(EnumType.STRING)
     @Column(name = "exercise_goal", length = 30)
-    private GoalType exerciseGoal;
+    private GoalType exerciseGoal = GoalType.BEGINNER; //기본값
 
     // 실측 보폭 (m)
     @Column(name = "stride_length")

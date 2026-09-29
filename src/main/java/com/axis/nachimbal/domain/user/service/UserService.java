@@ -2,10 +2,13 @@ package com.axis.nachimbal.domain.user.service;
 
 import com.axis.nachimbal.domain.user.dto.*;
 import com.axis.nachimbal.domain.user.entity.User;
+import com.axis.nachimbal.domain.user.enums.AuthProvider;
 import com.axis.nachimbal.domain.user.repository.UserRepository;
+import com.axis.nachimbal.global.exception.SocialAccountException;
 import com.axis.nachimbal.global.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // [ 안정 심박수 업데이트] : 온보딩 최초 저장 + 마이페이지 재측정 동일 API 사용
     @Transactional
@@ -72,5 +76,27 @@ public class UserService {
         user.updateStride(request.getStrideLength());
         log.info("[Stride] 보폭 저장: userId={} strideLength={}m",
                 user.getId(), request.getStrideLength());
+    }
+
+    // 내 정보 확인
+    @Transactional(readOnly = true)
+    public MyInfoResponse getMyInfo(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("존재하지 않는 유저입니다."));
+
+        boolean isSocial = user.getProvider() != AuthProvider.LOCAL;
+        return new MyInfoResponse(user.getLoginId(), user.getEmail(), isSocial);
+    }
+
+    // 비번 변경
+    public void changePassword(Long userId, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("존재하지 않는 유저입니다."));
+
+        if (user.getProvider() != AuthProvider.LOCAL) {
+            throw new SocialAccountException("소셜 로그인 계정은 비밀번호를 변경할 수 없습니다.");
+        }
+
+        user.updatePasswordHash(passwordEncoder.encode(newPassword));
     }
 }

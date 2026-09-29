@@ -1,5 +1,6 @@
 package com.axis.nachimbal.domain.user.entity;
 
+import com.axis.nachimbal.domain.user.enums.AuthProvider;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -22,14 +23,27 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "login_id", nullable = false, unique = true, length = 20)
+    private String loginId;
+
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash") // 소셜 로그인 유저는 null
     private String passwordHash;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "provider", nullable = false, length = 20)
+    private AuthProvider provider = AuthProvider.LOCAL;
+
+    @Column(name = "provider_id")
+    private String providerId; // 소셜 로그인 시 발급받는 고유 식별자, 로컬 가입 시 null
+
+    @Column(name = "email_verified", nullable = false)
+    private Boolean emailVerified = false;
+
     // 나이
-    @Column(name = "age", nullable = false)
+    @Column(name = "age")
     private Integer age;
 
     // 안정 심박수 (bpm) - 최초 측정 전 NULL
@@ -54,17 +68,25 @@ public class User {
     private LocalDateTime createdAt;
 
     @Builder
-    public User(String email, String passwordHash, Integer age, Integer restingHr) {
+    public User(String loginId, String email, String passwordHash, AuthProvider provider,
+                String providerId) {
+        this.loginId = loginId;
         this.email = email;
         this.passwordHash = passwordHash;
-        this.age = age;
-        this.restingHr = restingHr;
+        this.provider = provider != null ? provider : AuthProvider.LOCAL;
+        this.providerId = providerId;
+        this.emailVerified = false;
         this.paceControlEnabled = true;
     }
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    // 이메일 인증 완료 처리
+    public void verifyEmail() {
+        this.emailVerified = true;
     }
 
     // 안정 심박수 업데이트 (온보딩 최초 저장 + 마이페이지 재측정 모두 사용)
@@ -85,4 +107,8 @@ public class User {
 
     // 보폭 업데이트
     public void updateStride(double strideLength) { this.strideLength = strideLength; }
+
+    public void updatePasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
 }

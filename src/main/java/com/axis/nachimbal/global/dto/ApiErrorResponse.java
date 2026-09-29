@@ -31,7 +31,11 @@ public class ApiErrorResponse {
             case 401 -> "Unauthorized";
             case 403 -> "Forbidden";
             case 404 -> "Not Found";
+            case 405 -> "Method Not Allowed";
+            case 409 -> "Conflict";
+            case 429 -> "Too Many Requests";
             case 500 -> "Internal Server Error";
+            case 502 -> "Bad Gateway";
             default -> "Unknown Error";
         };
     }

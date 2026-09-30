@@ -1,16 +1,13 @@
 package com.axis.nachimbal.domain.user.controller;
 
-import com.axis.nachimbal.domain.user.dto.UpdateAgeRequest;
-import com.axis.nachimbal.domain.user.dto.UpdatePaceControlRequest;
-import com.axis.nachimbal.domain.user.dto.UpdateExerciseGoalRequest;
-import com.axis.nachimbal.domain.user.dto.UpdateRhrRequest;
-import com.axis.nachimbal.domain.user.dto.UpdateRhrResponse;
-import com.axis.nachimbal.domain.user.dto.UpdateStrideRequest;
+import com.axis.nachimbal.domain.user.dto.*;
 import com.axis.nachimbal.domain.user.service.UserService;
 import com.axis.nachimbal.global.dto.ApiResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -81,6 +78,26 @@ public class UserController {
         userService.updateStride(request);
         return ResponseEntity.ok(
                 ApiResponse.success("STRIDE_UPDATED", "보폭이 저장되었습니다.")
+        );
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<MyInfoResponse>> getMyInfo(@AuthenticationPrincipal Long userId) {
+        MyInfoResponse response = userService.getMyInfo(userId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("MY_INFO_FETCHED", "내 정보 조회가 완료되었습니다.", response)
+        );
+    }
+
+    @PutMapping("/password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        userService.changePassword(userId, request.getNewPassword());
+
+        return ResponseEntity.ok(
+                ApiResponse.success("PASSWORD_CHANGED", "비밀번호가 변경되었습니다.", null)
         );
     }
 }

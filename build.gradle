@@ -26,19 +26,38 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-//	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-//	testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+	// Spring Security (인증/인가 + PasswordEncoder)
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// OAuth2 소셜 로그인 (Kakao/Google — 표준 OAuth2 프로토콜)
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+	// JWT
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+	// Redis (RefreshToken, 이메일 인증번호 TTL 저장용)
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	// 이메일 발송 (인증번호 메일)
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+	// 구글
+	implementation 'com.google.api-client:google-api-client:2.7.0'
 
 	// 테스트용
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

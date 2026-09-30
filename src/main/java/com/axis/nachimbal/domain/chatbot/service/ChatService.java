@@ -16,7 +16,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ChatService {
 
-    private final ExerciseSummaryService summaryService;   // 1번 단계에서 만든 서비스
+    private final ExerciseSummaryService summaryService;
     private final OpenAiClient openAiClient;
 
     private static final String SYSTEM_PROMPT_TEMPLATE = """

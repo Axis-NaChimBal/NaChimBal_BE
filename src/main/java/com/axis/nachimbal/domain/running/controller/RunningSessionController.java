@@ -10,6 +10,7 @@ import com.axis.nachimbal.global.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -23,12 +24,13 @@ public class RunningSessionController {
     // [ 세션 시작 API ]
     @PostMapping("/start")
     public ResponseEntity<ApiResponse<SessionStartResponse>> startSession(
+            @AuthenticationPrincipal Long userId,
             @RequestBody SessionStartRequest request) {
 
         log.debug("[API] POST /api/running/session/start: userId={} goal={} routeDistance={}",
-                request.getUserId(), request.getGoal(), request.getRouteDistance());
+                userId, request.getGoal(), request.getRouteDistance());
 
-        SessionStartResponse response = runningSessionService.startSession(request);
+        SessionStartResponse response = runningSessionService.startSession(userId, request);
         return ResponseEntity.ok(
                 ApiResponse.success("SESSION_STARTED", "세션이 시작되었습니다.", response)
         );

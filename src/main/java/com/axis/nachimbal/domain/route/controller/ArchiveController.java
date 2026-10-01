@@ -8,9 +8,9 @@ import com.axis.nachimbal.domain.route.service.ArchiveService;
 import com.axis.nachimbal.domain.route.dto.RouteDetailResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,22 +23,25 @@ public class ArchiveController {
 
     private final ArchiveService routeService;
 
-    @Value("${app.temp.default-user-id}")
-    private Long defaultUserId;
-
     @PostMapping
-    public ResponseEntity<RouteSummaryResponse> createRoute(@Valid @RequestBody RouteCreateRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(routeService.createRoute(defaultUserId, request));
+    public ResponseEntity<RouteSummaryResponse> createRoute(
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody RouteCreateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(routeService.createRoute(userId, request));
     }
 
     @GetMapping
-    public ResponseEntity<List<RouteSummaryResponse>> getRoutes(@RequestParam("category") RouteCategory category) {
-        return ResponseEntity.ok(routeService.getRoutes(defaultUserId, category));
+    public ResponseEntity<List<RouteSummaryResponse>> getRoutes(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam("category") RouteCategory category) {
+        return ResponseEntity.ok(routeService.getRoutes(userId, category));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRoute(@PathVariable("id") Long id) {
-        routeService.deleteRoute(defaultUserId, id);
+    public ResponseEntity<Void> deleteRoute(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable("id") Long id) {
+        routeService.deleteRoute(userId, id);
         return ResponseEntity.noContent().build();
     }
 

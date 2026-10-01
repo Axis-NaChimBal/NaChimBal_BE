@@ -6,6 +6,7 @@ import com.axis.nachimbal.domain.challenge.service.ChallengeGoalService;
 import com.axis.nachimbal.global.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +18,9 @@ public class ChallengeGoalController {
     private final ChallengeGoalService challengeGoalService;
 
     // 주간/월간 목표 저장
-    @PostMapping("/{userId}")
+    @PostMapping
     public ResponseEntity<?> saveGoal(
-            @PathVariable Long userId,
+            @AuthenticationPrincipal Long userId,
             @RequestBody @Validated GoalSaveRequest req
     ) {
         GoalSaveResponse result = challengeGoalService.saveGoal(userId, req);

@@ -22,21 +22,22 @@ public class UserController {
     // [ 안정 심박수 업데이트 API ]
     @PutMapping("/rhr")
     public ResponseEntity<ApiResponse<UpdateRhrResponse>> updateRhr(
+            @AuthenticationPrincipal Long userId,
             @RequestBody UpdateRhrRequest request) {
 
         log.debug("[API] PUT /api/user/rhr: userId={} restingHr={}",
-                request.getUserId(), request.getRestingHr());
+                userId, request.getRestingHr());
 
-        UpdateRhrResponse response = userService.updateRhr(request);
+        UpdateRhrResponse response = userService.updateRhr(userId, request);
         return ResponseEntity.ok(
                 ApiResponse.success("RHR_UPDATED", "안정 심박수가 저장되었습니다.", response)
         );
     }
 
     // 나이 업데이트
-    @PatchMapping("/{userId}/age")
+    @PatchMapping("/age")
     public ResponseEntity<?> updateAge(
-            @PathVariable Long userId,
+            @AuthenticationPrincipal Long userId,
             @RequestBody @Validated UpdateAgeRequest req
     ) {
         Integer result = userService.updateAge(userId, req);
@@ -47,9 +48,9 @@ public class UserController {
     }
 
     // 페이스 조절 업데이트
-    @PatchMapping("/{userId}/paceControl")
+    @PatchMapping("/paceControl")
     public ResponseEntity<?> updatePaceControl(
-            @PathVariable Long userId,
+            @AuthenticationPrincipal Long userId,
             @RequestBody @Validated UpdatePaceControlRequest req
     ) {
         Boolean result = userService.updatePaceControl(userId, req);
@@ -60,22 +61,25 @@ public class UserController {
     }
 
     // 운동목표 업데이트
-     @PatchMapping("/{userId}/exerciseGoal")
+    @PatchMapping("/exerciseGoal")
     public ResponseEntity<?> updateExerciseGoal(
-            @PathVariable("userId") Long userId,
+            @AuthenticationPrincipal Long userId,
             @RequestBody @Validated UpdateExerciseGoalRequest req
-    ) { String result = userService.updateExerciseGoal(userId, req);
-        return ResponseEntity.ok(ApiResponse.success("SUCCESS_SAVE_EXERCISE_GOAL", "운동목표를 저장했습니다.", "운동목표 = " + result)
+    ) {
+        String result = userService.updateExerciseGoal(userId, req);
+        return ResponseEntity.ok(
+                ApiResponse.success("SUCCESS_SAVE_EXERCISE_GOAL", "운동목표를 저장했습니다.", "운동목표 = " + result)
         );
     }
 
     // 보폭 업데이트 API
     @PutMapping("/stride")
     public ResponseEntity<ApiResponse<Void>> updateStride(
+            @AuthenticationPrincipal Long userId,
             @RequestBody UpdateStrideRequest request) {
         log.debug("[API] PUT /api/user/stride: userId={} strideLength={}",
-                request.getUserId(), request.getStrideLength());
-        userService.updateStride(request);
+                userId, request.getStrideLength());
+        userService.updateStride(userId, request);
         return ResponseEntity.ok(
                 ApiResponse.success("STRIDE_UPDATED", "보폭이 저장되었습니다.")
         );

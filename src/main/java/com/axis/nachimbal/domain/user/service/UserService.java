@@ -23,11 +23,11 @@ public class UserService {
 
     // [ 안정 심박수 업데이트] : 온보딩 최초 저장 + 마이페이지 재측정 동일 API 사용
     @Transactional
-    public UpdateRhrResponse updateRhr(UpdateRhrRequest request) {
+    public UpdateRhrResponse updateRhr(Long userId, UpdateRhrRequest request) {
 
-        User user = userRepository.findById(request.getUserId())
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "사용자를 찾을 수 없습니다. userId=" + request.getUserId()));
+                        "사용자를 찾을 수 없습니다. userId=" + userId));
 
         user.updateRhr(request.getRestingHr());
 
@@ -60,7 +60,7 @@ public class UserService {
     // 운동목표
     public String updateExerciseGoal(Long userId, UpdateExerciseGoalRequest req) {
         User user = userRepository.findById(userId)
-               .orElseThrow(() -> new UserNotFoundException("존재하지 않는 유저입니다."));
+                .orElseThrow(() -> new UserNotFoundException("존재하지 않는 유저입니다."));
 
         user.updateExerciseGoal(req.getExerciseGoal());
 
@@ -69,10 +69,10 @@ public class UserService {
 
     // 보폭 업데이트
     @Transactional
-    public void updateStride(UpdateStrideRequest request) {
-        User user = userRepository.findById(request.getUserId())
+    public void updateStride(Long userId, UpdateStrideRequest request) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "사용자를 찾을 수 없습니다. userId=" + request.getUserId()));
+                        "사용자를 찾을 수 없습니다. userId=" + userId));
         user.updateStride(request.getStrideLength());
         log.info("[Stride] 보폭 저장: userId={} strideLength={}m",
                 user.getId(), request.getStrideLength());

@@ -53,10 +53,10 @@ public class RunningSessionService {
 
     // [ 세션 시작 ]
     @Transactional
-    public SessionStartResponse startSession(SessionStartRequest request) {
-        User user = userRepository.findById(request.getUserId())
+    public SessionStartResponse startSession(Long userId, SessionStartRequest request) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "사용자를 찾을 수 없습니다. userId=" + request.getUserId()));
+                        "사용자를 찾을 수 없습니다. userId=" + userId));
         Double speedMps = resolveSpeedMpsOrNull(request);
         Integer totalTimeSec = (speedMps != null)
                 ? (int) Math.round((request.getRouteDistance() * 1000) / speedMps)
@@ -76,7 +76,6 @@ public class RunningSessionService {
         log.info("[Session] 세션 시작: sessionId={} userId={} goal={} totalTimeSec={}",
                 saved.getId(), user.getId(), request.getGoal(), totalTimeSec);
 
-        // AI 페이스 조절 모드일 때만 AI 서버에 세션 등록 (명시적 paceMode로 판단)(target_zone 없음, resting_hr/age/target_duration만 전달)
         if ("AI".equals(request.getPaceMode())) {
             aiServerClient.initSession(saved.getId(), hrRest, user.getAge(), totalTimeSec);
         }

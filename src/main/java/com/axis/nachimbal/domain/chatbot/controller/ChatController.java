@@ -6,6 +6,7 @@ import com.axis.nachimbal.domain.chatbot.service.ChatService;
 import com.axis.nachimbal.global.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,9 +16,9 @@ public class ChatController {
 
     private final ChatService chatService;
 
-    @PostMapping("/{userId}")
+    @PostMapping
     public ResponseEntity<?> chat(
-            @PathVariable("userId") Long userId,
+            @AuthenticationPrincipal Long userId,
             @RequestBody ChatRequestDto request
     ) {
         ChatResponseDto result = chatService.chat(userId, request);

@@ -74,7 +74,7 @@ public class AuthController {
 
     // 아이디 중복 확인
     @GetMapping("/check-login-id")
-    public ResponseEntity<ApiResponse<Boolean>> checkLoginId(@RequestParam String loginId) {
+    public ResponseEntity<ApiResponse<Boolean>> checkLoginId(@RequestParam("loginId") String loginId) {
 
         boolean available = authService.isLoginIdAvailable(loginId);
         return ResponseEntity.ok(
@@ -84,7 +84,7 @@ public class AuthController {
 
     // 이메일 중복 확인
     @GetMapping("/check-email")
-    public ResponseEntity<ApiResponse<Boolean>> checkEmail(@RequestParam String email) {
+    public ResponseEntity<ApiResponse<Boolean>> checkEmail(@RequestParam("email") String email) {
 
         boolean available = authService.isEmailAvailable(email);
         return ResponseEntity.ok(

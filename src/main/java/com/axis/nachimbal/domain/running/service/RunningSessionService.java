@@ -62,6 +62,7 @@ public class RunningSessionService {
                 ? (int) Math.round((request.getRouteDistance() * 1000) / speedMps)
                 : null;
         int hrRest = user.getRestingHr() != null ? user.getRestingHr() : 60;
+        int userAge = user.getAge() != null ? user.getAge() : 24;
 
         ExerciseSession session = ExerciseSession.builder()
                 .userId(user.getId())
@@ -77,7 +78,7 @@ public class RunningSessionService {
                 saved.getId(), user.getId(), request.getGoal(), totalTimeSec);
 
         if ("AI".equals(request.getPaceMode())) {
-            aiServerClient.initSession(saved.getId(), hrRest, user.getAge(), totalTimeSec);
+            aiServerClient.initSession(saved.getId(), hrRest, userAge, totalTimeSec);
         }
 
         return new SessionStartResponse(saved.getId(), totalTimeSec, "started");

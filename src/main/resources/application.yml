@@ -6,17 +6,16 @@ spring:
     name: NaChimBal
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    # 데이터베이스 이름(nachimbaldb)이 실제 MySQL에 생성되어 있어야 함.
-    url: jdbc:mysql://localhost:3306/nachimbaldb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: root
-    password: root # 본인의 MySQL 비밀번호
+    url: ${DB_URL:jdbc:mysql://localhost:3306/nachimbaldb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
     properties:
       hibernate:
-        format_sql: true # SQL을 예쁘게 출력해줌.
+        format_sql: true
     database-platform: org.hibernate.dialect.MySQLDialect
   servlet:
     multipart:
@@ -24,13 +23,13 @@ spring:
       max-request-size: 50MB
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   mail:
     host: smtp.gmail.com
     port: 587
-    username: axis.nachimbal@gmail.com      # 발송용 구글 계정 이메일
-    password: znup arvz fcge rehx    # 방금 발급받은 16자리 앱 비밀번호
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -41,41 +40,36 @@ spring:
           timeout: 5000
           writetimeout: 5000
 jwt:
-  secret: 7558ef9b8f872654d4a2a39b956f58d3b623ae16de5f81d52cc7ab394232c410c9df44a5e5299fe346908048aa7ab7281e6edea9a7ce5d76d1b6a4526f36a3b9
-  access-token-expiration: 3600000    # 1시간 (ms)
-  refresh-token-expiration: 1209600000 # 14일 (ms)
+  secret: ${JWT_SECRET}
+  access-token-expiration: 3600000
+  refresh-token-expiration: 1209600000
 
 logging:
   level:
-    # 본인의 프로젝트 패키지 경로에 맞춰 수정
     com.axis.nachimbal: DEBUG
 
 oauth:
   google:
     client-id: 686084387725-shclkcr0ik1nkd9dtqb05n255bo2n0kq.apps.googleusercontent.com
 
-# tmap api o
 api:
-  key: hFnN1A4Q3xWP2y6QPB386gdKPLwSwJw4yKHotoRj
+  key: ${TMAP_API_KEY}
   base-url: https://apis.openapi.sk.com/tmap
 
-# ncp maps api (reverse geocoding) o
 ncp:
   maps:
-    client-id: "r68al6x3jb"
-    client-secret: "dP1Nmdv7d7xw4gBrADculMDIt4nO3O7yRHJUygx0"
+    client-id: ${NCP_CLIENT_ID}
+    client-secret: ${NCP_CLIENT_SECRET}
     reverse-geocode-url: https://maps.apigw.ntruss.com/map-reversegeocode/v2/gc
 
-# AI 서버 주소 (로컬)
 ai:
   server:
-    url: http://localhost:8000
+    url: ${AI_SERVER_URL:http://localhost:8000}
   gps-art:
-    base-url: http://localhost:8000
+    base-url: ${AI_SERVER_URL:http://localhost:8000}
 
-# OpenAPI o
 openai:
   api:
-    key: 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
+    key: ${OPENAI_API_KEY}
   model: gpt-5.5
   base-url: https://api.openai.com/v1/chat/completions

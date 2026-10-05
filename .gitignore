@@ -37,9 +37,17 @@ out/
 .vscode/
 
 # Sensitive configuration files
-application.yaml
-application.yml
-application.properties
-*.yaml
-*.yml
-*.properties
+.env
+*.env
+be.env
+
+/application.yml
+application-local.yml
+application-local.yaml
+application-local.properties
+application-secret*.yml
+
+*.pem
+*.jks
+*.keystore
+

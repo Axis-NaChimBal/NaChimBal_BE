@@ -102,6 +102,8 @@ public class GpsArtService {
                 .waypoints(waypoints)
                 .totalDistanceMeters(root.path("totalDistanceMeters").asDouble())
                 .distScore(root.path("distScore").asDouble())
+                .shape(root.path("shape").asText(null))
+                .exactMatch(root.path("exactMatch").asBoolean())
                 .build();
     }
 }

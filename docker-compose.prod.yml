@@ -1,0 +1,24 @@
+services:
+  be:
+    build: .
+    image: nachimbal-be:latest
+    container_name: nachimbal-be
+    restart: unless-stopped
+    env_file: /home/ubuntu/be.env
+    environment:
+      REDIS_HOST: redis
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    container_name: nachimbal-redis
+    restart: unless-stopped
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:

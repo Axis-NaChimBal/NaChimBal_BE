@@ -27,4 +27,6 @@ public class UserStatsResponse {
     private double        weeklyDistance;
     private boolean       weeklyGoalAchieved;
     private int           streakDays;
+    private Integer avgMaxHR;
+    private Integer avgMinHR;
 }

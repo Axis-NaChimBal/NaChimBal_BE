@@ -19,11 +19,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -67,6 +63,20 @@ public class UserStatsService {
         double avgSpeed   = monthlyResults.stream().mapToDouble(ExerciseResult::getAvgSpeedKmh).average().orElse(0);
         double maxRec     = monthlyResults.stream().mapToDouble(ExerciseResult::getDistanceKm).max().orElse(0);
         double monthlyDist = monthlyResults.stream().mapToDouble(ExerciseResult::getDistanceKm).sum();
+
+        // 평균 최고/최저 심박수 (심박 미측정 기록(null/0)은 제외, 기록 없으면 null)
+        OptionalDouble avgMaxHrOpt = monthlyResults.stream()
+                .map(ExerciseResult::getMaxHeartRate)
+                .filter(hr -> hr != null && hr > 0)
+                .mapToInt(Integer::intValue)
+                .average();
+        OptionalDouble avgMinHrOpt = monthlyResults.stream()
+                .map(ExerciseResult::getMinHeartRate)
+                .filter(hr -> hr != null && hr > 0)
+                .mapToInt(Integer::intValue)
+                .average();
+        Integer avgMaxHR = avgMaxHrOpt.isPresent() ? (int) Math.round(avgMaxHrOpt.getAsDouble()) : null;
+        Integer avgMinHR = avgMinHrOpt.isPresent() ? (int) Math.round(avgMinHrOpt.getAsDouble()) : null;
 
         // 월간 목표 달성률
         Optional<ChallengeGoal> monthlyGoalOpt = challengeGoalRepository
@@ -134,6 +144,8 @@ public class UserStatsService {
                 .weeklyDistance(Math.round(weeklyDist * 10.0) / 10.0)
                 .weeklyGoalAchieved(weeklyGoalAchieved)
                 .streakDays(currentStreak)
+                .avgMaxHR(avgMaxHR)
+                .avgMinHR(avgMinHR)
                 .build();
     }
 }

@@ -18,7 +18,9 @@ public interface ExerciseResultRepository extends JpaRepository<ExerciseResult, 
             COUNT(r.id),
             COALESCE(AVG(r.distanceKm), 0),
             COALESCE(AVG(r.avgSpeedKmh), 0),
-            COALESCE(SUM(r.durationSec), 0)
+            COALESCE(SUM(r.durationSec), 0),
+            AVG(NULLIF(r.avgHeartRate, 0)),
+            COALESCE(SUM(r.caloriesKcal), 0.0)
         )
         FROM ExerciseResult r
         JOIN r.session s
@@ -36,7 +38,7 @@ public interface ExerciseResultRepository extends JpaRepository<ExerciseResult, 
     @Query("""
         SELECT r
         FROM ExerciseResult r
-        JOIN r.session s
+        JOIN FETCH r.session s
         WHERE s.userId = :userId
           AND s.sessionStatus = com.axis.nachimbal.domain.running.entity.SessionStatus.ENDED
         ORDER BY s.startedAt DESC

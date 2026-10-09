@@ -4,6 +4,7 @@ import com.axis.nachimbal.domain.chatbot.client.OpenAiClient;
 import com.axis.nachimbal.domain.chatbot.dto.ChatRequestDto;
 import com.axis.nachimbal.domain.chatbot.dto.ChatResponseDto;
 import com.axis.nachimbal.domain.chatbot.dto.ExerciseSummaryDto;
+import com.axis.nachimbal.domain.result.entity.ExerciseResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +27,12 @@ public class ChatService {
             이미 계산되어 주어지니, 그 값을 벗어나서 사용자의 실제 기록인 것처럼
             새로운 개인 수치를 지어내지 마.
 
+            데이터는 최근 7일 요약, 최근 한 달 요약, 가장 최근 러닝 1건으로 주어져.
+            질문에 맞는 기간을 골라서 써. "지난번이랑 비교" 같은 질문에는
+            가장 최근 러닝을 최근 7일·한 달 평균과 비교해서 답해.
+            심박수가 "측정 기록 없음"이면 밴드 없이 달린 것이니 심박에 대한
+            판단은 하지 마.
+
             단, 사용자 러닝 기록이 없거나 부족해서 훈련 계획을 구체적으로
             짜야 할 때는 예외야. 이 경우엔 "가볍게", "편안하게" 같은 추상적인
             표현만 쓰지 말고, 일반적인 초보자 기준의 시간(분)이나 거리(km) 같은
@@ -36,15 +44,13 @@ public class ChatService {
             (**굵게**, - 목록, # 제목, `코드` 등)을 절대 쓰지 말고 순수 텍스트로만
             답변해. 강조하고 싶으면 이모지나 문장 구조로 표현해.
 
-            [이번 주 운동 요약]
             %s
             """;
 
     public ChatResponseDto chat(Long userId, ChatRequestDto request) {
 
         // 요약 통계 조회 + 조합
-        ExerciseSummaryDto summary = summaryService.getWeeklySummary(userId);
-        String systemPrompt = SYSTEM_PROMPT_TEMPLATE.formatted(summary.toPromptContext());
+        String systemPrompt = SYSTEM_PROMPT_TEMPLATE.formatted(buildExerciseContext(userId));
 
         List<Map<String, String>> messages = new ArrayList<>();
         messages.add(buildMessage("system", systemPrompt));
@@ -64,6 +70,54 @@ public class ChatService {
 
         // 지금은 텍스트 그대로 반환 (구조화는 필요해지면 여기서 확장)
         return new ChatResponseDto(answer);
+    }
+
+    // 최근 7일·한 달 요약 + 직전 러닝 1건을 프롬프트용 텍스트로 조합
+    private String buildExerciseContext(Long userId) {
+        Optional<ExerciseResult> latest = summaryService.getLatestSession(userId);
+
+        // 기록이 아예 없는 신규 사용자 → GPT가 초보자 기준으로 안내하도록 명시
+        if (latest.isEmpty()) {
+            return "[운동 기록]\n아직 러닝 기록이 없는 신규 사용자야. 일반적인 초보자 기준으로 안내해줘.";
+        }
+
+        ExerciseSummaryDto weekly  = summaryService.getWeeklySummary(userId);
+        ExerciseSummaryDto monthly = summaryService.getMonthlySummary(userId);
+
+        return """
+                [최근 7일 요약]
+                %s
+
+                [최근 한 달 요약]
+                %s
+
+                [가장 최근 러닝]
+                %s""".formatted(
+                weekly.toPromptContext(),
+                monthly.toPromptContext(),
+                formatLatest(latest.get())
+        );
+    }
+
+    // 직전 러닝 1건 포맷 (바이탈 기능 추가 전 기록은 null일 수 있어 null 처리)
+    private String formatLatest(ExerciseResult r) {
+        Integer hr = r.getAvgHeartRate();
+        return """
+                날짜: %s
+                거리: %.2fkm
+                시간: %d분 %d초
+                평균 속도: %.1fkm/h
+                평균 심박수: %s
+                소모 칼로리: %skcal
+                페이스 조절 횟수: %s회""".formatted(
+                r.getSession().getStartedAt().toLocalDate(),
+                r.getDistanceKm(),
+                r.getDurationSec() / 60, r.getDurationSec() % 60,
+                r.getAvgSpeedKmh(),
+                (hr != null && hr > 0) ? hr + " bpm" : "측정 기록 없음",   // 0 = 밴드 미연결
+                r.getCaloriesKcal() != null ? Math.round(r.getCaloriesKcal()) : "-",
+                r.getPaceAdjustCount() != null ? r.getPaceAdjustCount() : 0
+        );
     }
 
     private Map<String, String> buildMessage(String role, String content) {

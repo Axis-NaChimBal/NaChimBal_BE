@@ -1,10 +1,13 @@
 package com.axis.nachimbal.domain.chatbot.service;
 
 import com.axis.nachimbal.domain.chatbot.dto.ExerciseSummaryDto;
+import com.axis.nachimbal.domain.result.entity.ExerciseResult;
 import com.axis.nachimbal.domain.result.repository.ExerciseResultRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class ExerciseSummaryService {
@@ -27,8 +30,10 @@ public class ExerciseSummaryService {
         return resultRepository.findSummary(userId, monthAgo, now);
     }
 
-    // 신규 유저 / 세션 0건 처리 — 프롬프트 조립 단계에서 이 케이스를 분기해서 "아직 러닝 기록이 없다"는 걸 시스템 프롬프트에 명시해줘야 함
-    public boolean hasNoData(ExerciseSummaryDto summary) {
-        return summary.sessionCount() == 0;
+    // 가장 최근 종료된 러닝 1건 조회 — 결과가 없으면 신규 유저(기록 0건)로 보고 ChatService에서 "기록 없음"을 프롬프트에 명시
+    public Optional<ExerciseResult> getLatestSession(Long userId) {
+        return resultRepository.findLatestSessions(userId, PageRequest.of(0, 1))
+                .stream()
+                .findFirst();
     }
 }

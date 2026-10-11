@@ -4,7 +4,9 @@ import com.axis.nachimbal.domain.route.dto.*;
 import com.axis.nachimbal.domain.route.entity.PolylineCodec;
 import com.axis.nachimbal.domain.route.entity.Route;
 import com.axis.nachimbal.domain.route.entity.RouteCategory;
+import com.axis.nachimbal.domain.route.entity.RouteFavorite;
 import com.axis.nachimbal.domain.route.entity.Waypoint;
+import com.axis.nachimbal.domain.route.repository.RouteFavoriteRepository;
 import com.axis.nachimbal.domain.route.repository.RouteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +18,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.stream.Collectors;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -25,6 +29,7 @@ import java.util.Optional;
 public class ArchiveService {
 
     private final RouteRepository routeRepository;
+    private final RouteFavoriteRepository routeFavoriteRepository;
     private final GeocodingService geocodingService;
 
     @Transactional
@@ -54,7 +59,7 @@ public class ArchiveService {
 
         Route saved = routeRepository.save(route);
         log.info("경로 저장 완료: routeId={}, userId={}, category={}", saved.getId(), userId, saved.getCategory());
-        return RouteSummaryResponse.from(saved);
+        return RouteSummaryResponse.from(saved, false);
     }
 
     public List<RouteSummaryResponse> getRoutes(Long userId, RouteCategory category) {
@@ -62,7 +67,11 @@ public class ArchiveService {
                 ? routeRepository.findByUserIdAndCategoryOrderByCreatedAtDesc(userId, category)
                 : routeRepository.findByCategoryOrderByCreatedAtDesc(category);
 
-        return routes.stream().map(RouteSummaryResponse::from).toList();
+        // favorite 값은 요청한 사용자의 즐겨찾기 기준으로 계산
+        Set<Long> favoriteIds = routeFavoriteRepository.findRouteIdsByUserId(userId);
+        return routes.stream()
+                .map(r -> RouteSummaryResponse.from(r, favoriteIds.contains(r.getId())))
+                .toList();
     }
 
     @Transactional
@@ -70,6 +79,7 @@ public class ArchiveService {
         Route route = routeRepository.findByIdAndUserId(routeId, userId)
                 .orElseThrow(() -> new NoSuchElementException(
                         "삭제할 경로를 찾을 수 없거나 삭제 권한이 없습니다. id=" + routeId));
+        routeFavoriteRepository.deleteByRouteId(routeId);
         routeRepository.delete(route);
         log.info("경로 삭제 완료: routeId={}, userId={}", routeId, userId);
     }
@@ -129,7 +139,7 @@ public class ArchiveService {
 
         Route saved = routeRepository.save(route);
         log.info("GPS 아트 저장 완료: routeId={}, name={}", saved.getId(), name);
-        return RouteSummaryResponse.from(saved);
+        return RouteSummaryResponse.from(saved, false);
     }
 
     public RouteDetailResponse getRouteDetail(Long routeId) {
@@ -140,11 +150,20 @@ public class ArchiveService {
     }
 
     @Transactional
-    public Route updateFavorite(Long id, boolean favorite) {
+    public RouteSummaryResponse updateFavorite(Long userId, Long id, boolean favorite) {
         Route route = routeRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("경로를 찾을 수 없습니다. id=" + id));
-        route.setFavorite(favorite);
-        return route; // JPA dirty checking으로 자동 UPDATE
+        // MY_ROUTE는 본인 경로만 가능 (GPS_ART는 공용 목록이라 모든 사용자가 가능)
+        if (route.getCategory() == RouteCategory.MY_ROUTE && !Objects.equals(route.getUserId(), userId)) {
+            throw new NoSuchElementException("경로를 찾을 수 없습니다. id=" + id);
+        }
+        boolean exists = routeFavoriteRepository.existsByUserIdAndRouteId(userId, id);
+        if (favorite && !exists) {
+            routeFavoriteRepository.save(new RouteFavorite(userId, id));
+        } else if (!favorite && exists) {
+            routeFavoriteRepository.deleteByUserIdAndRouteId(userId, id);
+        }
+        return RouteSummaryResponse.from(route, favorite);
     }
 
     private String resolveAddress(RouteCreateRequest request) {

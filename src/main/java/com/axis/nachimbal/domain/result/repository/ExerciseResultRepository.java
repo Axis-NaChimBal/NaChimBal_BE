@@ -11,7 +11,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ExerciseResultRepository extends JpaRepository<ExerciseResult, Long> {
-    List<ExerciseResult> findAllBySession_UserId(Long userId);
+    // 결과 조회 시 세션까지 한 번에 가져옴 (N+1 방지 — getSession().getStartedAt() 호출 시 추가 쿼리 없음)
+    @Query("""
+        SELECT r
+        FROM ExerciseResult r
+        JOIN FETCH r.session s
+        WHERE s.userId = :userId
+        """)
+    List<ExerciseResult> findAllBySession_UserId(@Param("userId") Long userId);
 
     @Query("""
         SELECT new com.axis.nachimbal.domain.chatbot.dto.ExerciseSummaryDto(

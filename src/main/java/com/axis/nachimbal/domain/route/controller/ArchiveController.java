@@ -2,7 +2,6 @@ package com.axis.nachimbal.domain.route.controller;
 
 import com.axis.nachimbal.domain.route.dto.RouteCreateRequest;
 import com.axis.nachimbal.domain.route.dto.RouteSummaryResponse;
-import com.axis.nachimbal.domain.route.entity.Route;
 import com.axis.nachimbal.domain.route.entity.RouteCategory;
 import com.axis.nachimbal.domain.route.service.ArchiveService;
 import com.axis.nachimbal.domain.route.dto.RouteDetailResponse;
@@ -57,10 +56,10 @@ public class ArchiveController {
 
     @PatchMapping("/{id}/favorite")
     public ResponseEntity<RouteSummaryResponse> updateFavorite(
+            @AuthenticationPrincipal Long userId,
             @PathVariable("id") Long id,
             @RequestBody FavoriteRequest request) {
-        Route updated = routeService.updateFavorite(id, request.favorite());
-        return ResponseEntity.ok(RouteSummaryResponse.from(updated));
+        return ResponseEntity.ok(routeService.updateFavorite(userId, id, request.favorite()));
     }
 
     // 요청 body를 받을 DTO

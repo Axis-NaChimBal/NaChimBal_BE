@@ -49,12 +49,10 @@ public class Route {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    // [Deprecated] 사용하지 않음. 즐겨찾기는 route_favorites 테이블로 이전.
+    // DB 컬럼이 NOT NULL(기본값 없음)이라 엔티티 필드는 유지함. 안정화 후 컬럼과 함께 제거 예정.
     @Column(name = "favorite", nullable = false)
     private boolean favorite = false;
-
-    public void setFavorite(boolean favorite) {
-        this.favorite = favorite;
-    }
 
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orderIndex ASC")

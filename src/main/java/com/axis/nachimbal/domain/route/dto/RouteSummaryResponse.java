@@ -17,14 +17,14 @@ public class RouteSummaryResponse {
     private String imageUrl;
     private boolean favorite;
 
-    public static RouteSummaryResponse from(Route route) {
+    public static RouteSummaryResponse from(Route route, boolean favorite) {
         return RouteSummaryResponse.builder()
                 .id(String.valueOf(route.getId()))
                 .name(route.getName())
                 .distance(formatDistance(route.getTotalDistanceKm()))
                 .address(route.getAddress())
                 .imageUrl(route.getImageUrl())
-                .favorite(route.isFavorite())
+                .favorite(favorite)
                 .build();
     }
 
